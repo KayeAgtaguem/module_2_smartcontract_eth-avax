@@ -1,117 +1,34 @@
-import {useState, useEffect} from "react";
-import {ethers} from "ethers";
-import atm_abi from "../artifacts/contracts/Assessment.sol/Assessment.json";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.23;
 
-export default function HomePage() {
-  const [ethWallet, setEthWallet] = useState(undefined);
-  const [account, setAccount] = useState(undefined);
-  const [atm, setATM] = useState(undefined);
-  const [balance, setBalance] = useState(undefined);
+contract SmartContract {
+    uint256 public value;
 
-  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-  const atmABI = atm_abi.abi;
-
-  const getWallet = async() => {
-    if (window.ethereum) {
-      setEthWallet(window.ethereum);
+    function requireValue(uint256 _newValue) external {
+        require(_newValue >= 200 && _newValue <= 4000, "There is a value range of 200 to 4000 that you cannot exceed.");
+        value = _newValue;
     }
 
-    if (ethWallet) {
-      const account = await ethWallet.request({method: "eth_accounts"});
-      handleAccount(account);
-    }
-  }
-
-  const handleAccount = (account) => {
-    if (account) {
-      console.log ("Account connected: ", account);
-      setAccount(account);
-    }
-    else {
-      console.log("No account found");
-    }
-  }
-
-  const connectAccount = async() => {
-    if (!ethWallet) {
-      alert('MetaMask wallet is required to connect');
-      return;
-    }
-  
-    const accounts = await ethWallet.request({ method: 'eth_requestAccounts' });
-    handleAccount(accounts);
-    
-    // once wallet is set we can get a reference to our deployed contract
-    getATMContract();
-  };
-
-  const getATMContract = () => {
-    const provider = new ethers.providers.Web3Provider(ethWallet);
-    const signer = provider.getSigner();
-    const atmContract = new ethers.Contract(contractAddress, atmABI, signer);
- 
-    setATM(atmContract);
-  }
-
-  const getBalance = async() => {
-    if (atm) {
-      setBalance((await atm.getBalance()).toNumber());
-    }
-  }
-
-  const deposit = async() => {
-    if (atm) {
-      let tx = await atm.deposit(1);
-      await tx.wait()
-      getBalance();
-    }
-  }
-
-  const withdraw = async() => {
-    if (atm) {
-      let tx = await atm.withdraw(1);
-      await tx.wait()
-      getBalance();
-    }
-  }
-
-  const initUser = () => {
-    // Check to see if user has Metamask
-    if (!ethWallet) {
-      return <p>Please install Metamask in order to use this ATM.</p>
+    function assertValue(uint256 _num) external pure returns (uint256) {
+        assert(_num >= 200 && _num <= 4000);
+        return _num;
     }
 
-    // Check to see if user is connected. If not, connect to their account
-    if (!account) {
-      return <button onClick={connectAccount}>Please connect your Metamask wallet</button>
-    }
-
-    if (balance == undefined) {
-      getBalance();
-    }
-
-    return (
-      <div>
-        <p>Your Account: {account}</p>
-        <p>Your Balance: {balance}</p>
-        <button onClick={deposit}>Deposit 1 ETH</button>
-        <button onClick={withdraw}>Withdraw 1 ETH</button>
-      </div>
-    )
-  }
-
-  useEffect(() => {getWallet();}, []);
-
-  return (
-    <main className="container">
-      <header><h1>Welcome to the Metacrafters ATM!</h1></header>
-      {initUser()}
-      <style jsx>{`
-        .container {
-          text-align: center
+    function revertValue(uint256 _num) external pure returns (uint256) {
+        if (!(_num >= 200 && _num <= 4000)) {
+            revert("It must have a value between 200 and 4000.");
         }
-      `}
-      </style>
-    </main>
-  )
+        return _num;
+    }
+
+    // Function to set a specific value if all checks pass
+    function setValue(uint256 _value) external {
+        require(_value >= 200 && _value <= 4000, "Value must be between 200 and 4000.");
+        assert(_value >= 200 && _value <= 4000); // This will always pass due to the require above
+        if (!(_value >= 200 && _value <= 4000)) {
+            revert("Value must be between 200 and 4000."); // This will not trigger due to the require above
+        }
+
+        value = _value;
+    }
 }
