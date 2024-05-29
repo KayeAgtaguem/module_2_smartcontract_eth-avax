@@ -137,7 +137,7 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>WELCOME TO MY BANK ACCOUNT</h1>
+        <h1>YOU ARE IN PAYBANK</h1>
       </header>
       {initUser()}
       {selectedTransaction && (
